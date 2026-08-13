@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Betty: simulador de uma maquina automatica de corte de tecido." />
+    <title>Betty — corte automático</title>
+    <link rel="stylesheet" href="/web/styles.css" />
+    <script type="module" src="/web/app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/"><span>B</span> Betty</a>
+      <p>Laboratório de corte automático</p>
+      <span class="simulation-badge">SIMULAÇÃO</span>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow">SIMULADOR PRIMEIRO · HARDWARE DEPOIS</p>
+          <h1>Planeje o corte.<br /><em>Teste com segurança.</em></h1>
+        </div>
+        <p>Uma base aberta para visualizar trajetórias, validar estados da máquina e preparar a futura integração com uma cortadora real.</p>
+      </section>
+
+      <section class="workspace">
+        <aside class="panel controls">
+          <div>
+            <span class="label">ESTADO DA MÁQUINA</span>
+            <div class="machine-state"><i id="stateLight"></i><strong id="stateLabel">Sem trabalho</strong></div>
+          </div>
+
+          <div class="control-group">
+            <button id="loadJob" class="primary">Carregar molde de teste</button>
+            <button id="startJob">Iniciar corte</button>
+            <button id="pauseJob">Pausar</button>
+          </div>
+
+          <button id="emergencyStop" class="emergency"><span>PARADA</span> DE EMERGÊNCIA</button>
+          <button id="resetEmergency" class="quiet">Liberar emergência</button>
+
+          <div class="speed-control">
+            <label for="speed">Velocidade simulada <output id="speedValue">80 mm/s</output></label>
+            <input id="speed" type="range" min="20" max="200" value="80" />
+          </div>
+
+          <div class="stats">
+            <div><span>Progresso</span><strong id="progress">0%</strong></div>
+            <div><span>Distância de corte</span><strong id="cutDistance">—</strong></div>
+            <div><span>Deslocamento livre</span><strong id="travelDistance">—</strong></div>
+          </div>
+        </aside>
+
+        <section class="cut-area">
+          <div class="canvas-header">
+            <div><i></i><span>MESA 1600 × 1000 MM</span></div>
+            <span id="toolPosition">X 0 · Y 0</span>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="cutCanvas" width="960" height="600" aria-label="Simulação da mesa de corte"></canvas>
+            <div id="emptyState" class="empty-state">
+              <strong>Mesa pronta</strong>
+              <span>Carregue o molde de teste para começar.</span>
+            </div>
+          </div>
+          <div class="legend">
+            <span><i class="cut"></i>Linha de corte</span>
+            <span><i class="travel"></i>Deslocamento livre</span>
+            <span><i class="done"></i>Corte concluído</span>
+          </div>
+        </section>
+      </section>
+
+      <section class="safety-note">
+        <strong>Barreira de segurança</strong>
+        <p>Esta versão só simula movimentos. Nenhum adaptador de hardware é carregado e nenhuma saída física é enviada.</p>
+      </section>
+    </main>
+  </body>
+</html>
