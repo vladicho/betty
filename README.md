@@ -36,7 +36,17 @@ Para validar:
 ```bash
 npm run check
 npm test
+npm run build
 ```
+
+## Cloudflare Pages
+
+O projeto gera um site estatico em `dist/` e nao precisa de backend, banco de dados ou EC2.
+
+- comando de build: `npm run build`
+- diretorio de saida: `dist`
+- branch de producao: `main`
+- dominio planejado: `cutting.lugarerrado.com`
 
 ## Estrutura
 
