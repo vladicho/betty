@@ -32,36 +32,47 @@
           </div>
 
           <div class="control-group">
-            <button id="loadJob" class="primary">Carregar molde de teste</button>
+            <label class="file-button" for="cutFile">Importar SVG ou PLT</label>
+            <input id="cutFile" type="file" accept=".svg,.plt,.hpgl,.hpg,image/svg+xml" hidden />
+            <button id="loadJob">Usar molde de teste</button>
             <button id="startJob">Iniciar corte</button>
             <button id="pauseJob">Pausar</button>
           </div>
 
+          <div id="importStatus" class="import-status">Aguardando arquivo do MoldeLab.</div>
+
           <button id="emergencyStop" class="emergency"><span>PARADA</span> DE EMERGÊNCIA</button>
           <button id="resetEmergency" class="quiet">Liberar emergência</button>
+          <button id="exportProgram" class="quiet">Gerar programa da máquina</button>
 
           <div class="speed-control">
             <label for="speed">Velocidade simulada <output id="speedValue">80 mm/s</output></label>
             <input id="speed" type="range" min="20" max="200" value="80" />
           </div>
 
+          <div class="machine-size">
+            <label>Área simulada (mm)</label>
+            <div><input id="bedLength" type="number" min="500" max="50000" value="5000" aria-label="Comprimento da mesa" /><span>×</span><input id="bedWidth" type="number" min="500" max="5000" value="1800" aria-label="Largura da mesa" /></div>
+          </div>
+
           <div class="stats">
             <div><span>Progresso</span><strong id="progress">0%</strong></div>
             <div><span>Distância de corte</span><strong id="cutDistance">—</strong></div>
             <div><span>Deslocamento livre</span><strong id="travelDistance">—</strong></div>
+            <div><span>Arquivo</span><strong id="jobName">—</strong></div>
           </div>
         </aside>
 
         <section class="cut-area">
           <div class="canvas-header">
-            <div><i></i><span>MESA 1600 × 1000 MM</span></div>
+            <div><i></i><span id="bedSize">MESA 5000 × 1800 MM</span></div>
             <span id="toolPosition">X 0 · Y 0</span>
           </div>
           <div class="canvas-wrap">
             <canvas id="cutCanvas" width="960" height="600" aria-label="Simulação da mesa de corte"></canvas>
             <div id="emptyState" class="empty-state">
               <strong>Mesa pronta</strong>
-              <span>Carregue o molde de teste para começar.</span>
+              <span>Importe um SVG/PLT do MoldeLab ou use o molde de teste.</span>
             </div>
           </div>
           <div class="legend">

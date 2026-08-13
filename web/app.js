@@ -1,15 +1,18 @@
-import { distance, interpolate } from "/src/core/geometry.js";
-import { planCutPath } from "/src/core/path-planner.js";
+import { interpolate } from "/src/core/geometry.js";
 import { MachineState, SimulatedCutter } from "/src/core/machine.js";
+import { importCutFile, prepareCutJob } from "/src/core/job-pipeline.js";
+import { createCommandProgram } from "/src/core/machine-protocol.js";
 
 const canvas = document.querySelector("#cutCanvas");
 const ctx = canvas.getContext("2d");
 const ui = {
   load: document.querySelector("#loadJob"),
+  file: document.querySelector("#cutFile"),
   start: document.querySelector("#startJob"),
   pause: document.querySelector("#pauseJob"),
   emergency: document.querySelector("#emergencyStop"),
   reset: document.querySelector("#resetEmergency"),
+  exportProgram: document.querySelector("#exportProgram"),
   speed: document.querySelector("#speed"),
   speedValue: document.querySelector("#speedValue"),
   stateLabel: document.querySelector("#stateLabel"),
@@ -17,6 +20,11 @@ const ui = {
   progress: document.querySelector("#progress"),
   cutDistance: document.querySelector("#cutDistance"),
   travelDistance: document.querySelector("#travelDistance"),
+  jobName: document.querySelector("#jobName"),
+  importStatus: document.querySelector("#importStatus"),
+  bedLength: document.querySelector("#bedLength"),
+  bedWidth: document.querySelector("#bedWidth"),
+  bedSize: document.querySelector("#bedSize"),
   toolPosition: document.querySelector("#toolPosition"),
   empty: document.querySelector("#emptyState"),
 };
@@ -32,8 +40,11 @@ const labels = {
 
 const machine = new SimulatedCutter({ speed: Number(ui.speed.value) });
 let plan = null;
+let prepared = null;
+let currentJob = null;
 let segments = [];
 let lastFrame = performance.now();
+let viewSize = { width: 900, height: 600 };
 
 function sampleContours() {
   const closed = (points) => [...points, points[0]];
@@ -43,22 +54,6 @@ function sampleContours() {
     { id: "pocket", kind: "external", points: closed([{ x: 650, y: 150 }, { x: 780, y: 150 }, { x: 770, y: 280 }, { x: 715, y: 310 }, { x: 660, y: 280 }]) },
     { id: "collar", kind: "external", points: closed([{ x: 625, y: 395 }, { x: 820, y: 365 }, { x: 845, y: 430 }, { x: 645, y: 465 }]) },
   ];
-}
-
-function buildSegments(cutPlan) {
-  const result = [];
-  let cursor = { x: 0, y: 0 };
-  cutPlan.contours.forEach((contour) => {
-    const start = contour.points[0];
-    if (distance(cursor, start) > 0) result.push({ from: cursor, to: start, cutting: false, length: distance(cursor, start) });
-    for (let index = 1; index < contour.points.length; index += 1) {
-      const from = contour.points[index - 1];
-      const to = contour.points[index];
-      result.push({ from, to, cutting: true, length: distance(from, to), contourId: contour.id });
-    }
-    cursor = contour.points.at(-1);
-  });
-  return result;
 }
 
 function resizeCanvas() {
@@ -74,8 +69,8 @@ function resizeCanvas() {
 
 function screenPoint(point) {
   const padding = 35;
-  const scaleX = (canvas.width - padding * 2) / 900;
-  const scaleY = (canvas.height - padding * 2) / 600;
+  const scaleX = (canvas.width - padding * 2) / viewSize.width;
+  const scaleY = (canvas.height - padding * 2) / viewSize.height;
   const scale = Math.min(scaleX, scaleY);
   return { x: padding + point.x * scale, y: padding + point.y * scale };
 }
@@ -129,26 +124,91 @@ function updateUi(snapshot) {
   ui.pause.disabled = snapshot.state !== MachineState.RUNNING;
   ui.reset.disabled = snapshot.state !== MachineState.EMERGENCY;
   ui.load.disabled = snapshot.state === MachineState.RUNNING;
+  ui.file.disabled = snapshot.state === MachineState.RUNNING;
+  ui.exportProgram.disabled = !prepared || snapshot.state === MachineState.RUNNING || snapshot.state === MachineState.EMERGENCY;
   draw(snapshot);
 }
 
 machine.subscribe(updateUi);
-ui.load.addEventListener("click", () => {
-  plan = planCutPath(sampleContours());
-  segments = buildSegments(plan);
+function loadJob(job) {
+  const machineEnvelope = { width: Number(ui.bedLength.value), height: Number(ui.bedWidth.value) };
+  prepared = prepareCutJob(job, machineEnvelope);
+  currentJob = job;
+  plan = prepared.plan;
+  segments = prepared.segments;
+  const box = prepared.validation.bounds;
+  viewSize = {
+    width: Math.max(900, box.maxX * 1.06),
+    height: Math.max(600, box.maxY * 1.06),
+  };
   machine.load(segments);
   ui.cutDistance.textContent = `${plan.cutDistance.toFixed(0)} mm`;
   ui.travelDistance.textContent = `${plan.travelDistance.toFixed(0)} mm`;
+  ui.jobName.textContent = job.name;
   ui.empty.hidden = true;
+  const warning = prepared.validation.warnings.join(" ");
+  ui.importStatus.textContent = warning || `${job.contours.length} trajetoria(s) validadas e prontas para simular.`;
+  ui.importStatus.className = `import-status ${warning ? "warning" : "ok"}`;
+}
+
+ui.load.addEventListener("click", () => {
+  try {
+    loadJob({ name: "molde-teste.svg", format: "svg", units: "mm", contours: sampleContours() });
+  } catch (error) {
+    ui.importStatus.textContent = error.message;
+    ui.importStatus.className = "import-status error";
+  }
+});
+ui.file.addEventListener("change", async () => {
+  const file = ui.file.files[0];
+  if (!file) return;
+  try {
+    const source = await file.text();
+    loadJob(importCutFile(file.name, source));
+  } catch (error) {
+    prepared = null;
+    currentJob = null;
+    plan = null;
+    segments = [];
+    machine.load([]);
+    ui.importStatus.textContent = error.message;
+    ui.importStatus.className = "import-status error";
+  }
 });
 ui.start.addEventListener("click", () => machine.start());
 ui.pause.addEventListener("click", () => machine.pause());
 ui.emergency.addEventListener("click", () => machine.emergencyStop());
 ui.reset.addEventListener("click", () => machine.resetEmergency());
+ui.exportProgram.addEventListener("click", () => {
+  if (!prepared) return;
+  const program = createCommandProgram(prepared, { speed: machine.speed });
+  const blob = new Blob([JSON.stringify(program, null, 2)], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${prepared.job.name.replace(/\.[^.]+$/, "")}.betty.json`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  ui.importStatus.textContent = "Programa neutro gerado. O envio fisico continua bloqueado ate definirmos o controlador.";
+  ui.importStatus.className = "import-status warning";
+});
 ui.speed.addEventListener("input", () => {
   machine.speed = Number(ui.speed.value);
   ui.speedValue.textContent = `${machine.speed} mm/s`;
 });
+[ui.bedLength, ui.bedWidth].forEach((input) => input.addEventListener("change", () => {
+  ui.bedSize.textContent = `MESA ${ui.bedLength.value} × ${ui.bedWidth.value} MM`;
+  if (!currentJob) return;
+  try {
+    loadJob(currentJob);
+  } catch (error) {
+    prepared = null;
+    plan = null;
+    segments = [];
+    machine.load([]);
+    ui.importStatus.textContent = error.message;
+    ui.importStatus.className = "import-status error";
+  }
+}));
 window.addEventListener("resize", () => draw());
 
 function animate(now) {

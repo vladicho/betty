@@ -7,7 +7,9 @@
 - [x] cortes internos antes dos externos
 - [x] iniciar, pausar, liberar e parar em emergencia
 - [x] testes do nucleo
-- [ ] importar SVG, DXF e HPGL
+- [x] importar SVG linear, PLT e HPGL
+- [ ] importar curvas SVG com tolerancia configuravel
+- [ ] importar DXF
 - [ ] perfis de aceleracao e desaceleracao
 - [ ] compensacao visual da largura da lamina
 - [ ] detector de colisoes e limites

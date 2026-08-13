@@ -1,12 +1,16 @@
 # Betty
 
-Betty e uma base aberta para simular e, futuramente, integrar uma maquina automatica de corte de tecido.
+Betty e a ponte entre os arquivos de moldes produzidos pelo MoldeLab e uma futura maquina automatica de corte de tecido.
 
 O projeto comeca pelo simulador porque trajetorias, estados e falhas precisam ser observaveis e testaveis antes de qualquer conexao com uma maquina real. A versao atual nao envia comandos para hardware.
 
 ## O que ja funciona
 
 - mesa de corte em Canvas 2D;
+- importacao de `SVG`, `PLT` e `HPGL`;
+- conversao de coordenadas HPGL para milimetros;
+- validacao dos limites configuraveis da mesa;
+- identificacao de contornos internos, externos e trajetorias abertas;
 - molde de demonstracao com contornos internos e externos;
 - planejamento que corta detalhes internos primeiro;
 - ordenacao por vizinho mais proximo para reduzir deslocamentos;
@@ -14,6 +18,8 @@ O projeto comeca pelo simulador porque trajetorias, estados e falhas precisam se
 - iniciar, pausar, liberar e parada de emergencia simulada;
 - exibicao de progresso, distancia de corte e deslocamento livre;
 - nucleo desacoplado da interface e coberto por testes.
+- geracao do programa neutro `betty-cut/1` em JSON;
+- gateway de hardware explicitamente bloqueado enquanto o controlador nao for definido.
 
 ## Executar
 
@@ -35,7 +41,9 @@ npm test
 ## Estrutura
 
 ```text
-src/core/       geometria, planejador e maquina de estados
+src/core/       geometria, pipeline, planejador, protocolo e estados
+src/importers/  leitores de SVG e PLT/HPGL
+src/adapters/   fronteira isolada para o futuro hardware
 web/            simulador visual
 test/           testes automatizados
 docs/           arquitetura, seguranca e roadmap
@@ -46,9 +54,12 @@ scripts/        servidor local sem dependencias
 
 A arquitetura prevista separa tres responsabilidades:
 
-1. planejador de corte, que recebe os contornos e produz uma rota;
-2. controlador seguro, que valida estados e comandos;
-3. adaptador de maquina, que so existira depois da escolha do mecanismo e do controlador fisico.
+1. importador, que converte SVG ou PLT/HPGL do MoldeLab em contornos normalizados;
+2. validador, que impede coordenadas invalidas ou fora da mesa;
+3. planejador de corte, que ordena os contornos e produz uma rota;
+4. simulador, que permite revisar o processo inteiro no Canvas;
+5. protocolo neutro, que gera comandos de movimento e ferramenta;
+6. adaptador de maquina, que so sera habilitado depois da escolha do mecanismo e do controlador fisico.
 
 Consulte [Arquitetura](docs/ARCHITECTURE.md), [Seguranca](docs/SAFETY.md) e [Roadmap](docs/ROADMAP.md).
 

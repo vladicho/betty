@@ -5,7 +5,7 @@ function contourStart(contour) {
 }
 
 function contourPriority(contour) {
-  return contour.kind === "internal" ? 0 : 1;
+  return contour.kind === "external" ? 1 : 0;
 }
 
 function nearestOrder(contours, origin) {
