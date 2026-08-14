@@ -8,6 +8,7 @@ await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 await cp(join(projectRoot, "src"), join(output, "src"), { recursive: true });
 await cp(join(projectRoot, "web", "app.js"), join(output, "app.js"));
+await cp(join(projectRoot, "web", "import-worker.js"), join(output, "import-worker.js"));
 await cp(join(projectRoot, "web", "styles.css"), join(output, "styles.css"));
 await cp(join(projectRoot, "web", "index.html"), join(output, "index.html"));
 
