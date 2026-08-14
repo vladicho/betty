@@ -8,15 +8,16 @@ O projeto comeca pelo simulador porque trajetorias, estados e falhas precisam se
 
 - mesa de corte em Canvas 2D;
 - importacao de `SVG`, `PLT` e `HPGL`;
+- suporte a linhas, poligonos, retangulos, circulos, elipses, curvas Bezier e arcos SVG;
 - conversao de coordenadas HPGL para milimetros;
 - validacao dos limites configuraveis da mesa;
 - identificacao de contornos internos, externos e trajetorias abertas;
 - molde de demonstracao com contornos internos e externos;
 - planejamento que corta detalhes internos primeiro;
-- ordenacao por vizinho mais proximo para reduzir deslocamentos;
+- ordenacao por vizinho mais proximo, inversao de linhas abertas e escolha do ponto inicial de contornos fechados para reduzir deslocamentos;
 - velocidade configuravel;
 - iniciar, pausar, liberar e parada de emergencia simulada;
-- exibicao de progresso, distancia de corte e deslocamento livre;
+- exibicao de progresso, distancia, ordem de corte e tempo estimado;
 - nucleo desacoplado da interface e coberto por testes.
 - geracao do programa neutro `betty-cut/1` em JSON;
 - gateway de hardware explicitamente bloqueado enquanto o controlador nao for definido.
@@ -46,7 +47,7 @@ O projeto gera um site estatico em `dist/` e nao precisa de backend, banco de da
 - comando de build: `npm run build`
 - diretorio de saida: `dist`
 - branch de producao: `main`
-- dominio planejado: `cutting.lugarerrado.com`
+- dominio: [cutting.lugarerrado.com](https://cutting.lugarerrado.com)
 
 ## Estrutura
 
