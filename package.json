@@ -8,7 +8,7 @@
     "dev": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test",
-    "check": "node --check web/app.js && node --check src/core/geometry.js && node --check src/core/path-planner.js && node --check src/core/job-pipeline.js && node --check src/core/machine.js && node --check src/core/machine-protocol.js && node --check src/importers/svg.js && node --check src/importers/hpgl.js && node --check src/adapters/hardware-gateway.js"
+    "check": "node --check web/app.js && node --check web/import-worker.js && node --check scripts/build.mjs && node --check scripts/serve.mjs && node --check src/core/geometry.js && node --check src/core/preview.js && node --check src/core/path-planner.js && node --check src/core/job-pipeline.js && node --check src/core/machine.js && node --check src/core/machine-protocol.js && node --check src/importers/svg.js && node --check src/importers/hpgl.js && node --check src/adapters/hardware-gateway.js"
   },
   "engines": {
     "node": ">=20"
