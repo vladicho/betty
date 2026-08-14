@@ -7,7 +7,7 @@ const port = Number(process.env.PORT || 4173);
 const types = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".json": "application/json" };
 
 createServer(async (request, response) => {
-  const webAssets = new Set(["/app.js", "/styles.css"]);
+  const webAssets = new Set(["/app.js", "/import-worker.js", "/styles.css"]);
   const requested = request.url === "/" ? "/web/index.html" : webAssets.has(request.url) ? `/web${request.url}` : request.url;
   const relative = normalize(requested).replace(/^(\.\.[/\\])+/, "");
   const file = join(root, relative);
