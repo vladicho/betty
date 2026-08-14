@@ -11,3 +11,11 @@ test("prioriza contornos internos", () => {
   assert.deepEqual(plan.contours.map(({ id }) => id), ["inside", "outside"]);
   assert.equal(plan.cutDistance, 2);
 });
+
+test("inverte trajetoria aberta e gira contorno fechado para reduzir deslocamento", () => {
+  const open = { id: "open", kind: "internal", points: [{ x: 100, y: 0 }, { x: 10, y: 0 }] };
+  const closed = { id: "closed", kind: "external", points: [{ x: 100, y: 100 }, { x: 20, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }] };
+  const plan = planCutPath([open, closed]);
+  assert.deepEqual(plan.contours[0].points[0], { x: 10, y: 0 });
+  assert.deepEqual(plan.contours[1].points[0], { x: 100, y: 0 });
+});
