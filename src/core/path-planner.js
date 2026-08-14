@@ -4,6 +4,24 @@ function contourStart(contour) {
   return contour.points[0];
 }
 
+function orientContour(contour, cursor) {
+  const points = contour.points;
+  const closed = points.length > 2 && distance(points[0], points.at(-1)) < 0.0001;
+  if (!closed) {
+    const startDistance = distance(cursor, points[0]);
+    const endDistance = distance(cursor, points.at(-1));
+    return endDistance < startDistance ? { ...contour, points: [...points].reverse() } : contour;
+  }
+  const ring = points.slice(0, -1);
+  let nearest = 0;
+  ring.forEach((point, index) => {
+    if (distance(cursor, point) < distance(cursor, ring[nearest])) nearest = index;
+  });
+  if (!nearest) return contour;
+  const rotated = [...ring.slice(nearest), ...ring.slice(0, nearest)];
+  return { ...contour, points: [...rotated, { ...rotated[0] }] };
+}
+
 function contourPriority(contour) {
   return contour.kind === "external" ? 1 : 0;
 }
@@ -17,13 +35,15 @@ function nearestOrder(contours, origin) {
     let bestIndex = 0;
     let bestDistance = Infinity;
     pending.forEach((contour, index) => {
-      const travel = distance(cursor, contourStart(contour));
+      const oriented = orientContour(contour, cursor);
+      const travel = distance(cursor, contourStart(oriented));
       if (travel < bestDistance) {
         bestDistance = travel;
         bestIndex = index;
       }
     });
-    const [next] = pending.splice(bestIndex, 1);
+    const [raw] = pending.splice(bestIndex, 1);
+    const next = orientContour(raw, cursor);
     ordered.push(next);
     cursor = next.points.at(-1);
   }
