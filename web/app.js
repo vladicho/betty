@@ -20,6 +20,8 @@ const ui = {
   progress: document.querySelector("#progress"),
   cutDistance: document.querySelector("#cutDistance"),
   travelDistance: document.querySelector("#travelDistance"),
+  estimatedTime: document.querySelector("#estimatedTime"),
+  cutOrder: document.querySelector("#cutOrder"),
   jobName: document.querySelector("#jobName"),
   importStatus: document.querySelector("#importStatus"),
   bedLength: document.querySelector("#bedLength"),
@@ -129,6 +131,17 @@ function updateUi(snapshot) {
   draw(snapshot);
 }
 
+function updateEstimate() {
+  if (!plan) {
+    ui.estimatedTime.textContent = "—";
+    return;
+  }
+  const seconds = (plan.cutDistance + plan.travelDistance) / machine.speed;
+  const minutes = Math.floor(seconds / 60);
+  const remainder = Math.round(seconds % 60);
+  ui.estimatedTime.textContent = minutes ? `${minutes}m ${String(remainder).padStart(2, "0")}s` : `${remainder}s`;
+}
+
 machine.subscribe(updateUi);
 function loadJob(job) {
   const machineEnvelope = { width: Number(ui.bedLength.value), height: Number(ui.bedWidth.value) };
@@ -144,6 +157,8 @@ function loadJob(job) {
   machine.load(segments);
   ui.cutDistance.textContent = `${plan.cutDistance.toFixed(0)} mm`;
   ui.travelDistance.textContent = `${plan.travelDistance.toFixed(0)} mm`;
+  ui.cutOrder.textContent = `${plan.contours.filter(({ kind }) => kind === "internal").length} internas → ${plan.contours.filter(({ kind }) => kind === "external").length} externas`;
+  updateEstimate();
   ui.jobName.textContent = job.name;
   ui.empty.hidden = true;
   const warning = prepared.validation.warnings.join(" ");
@@ -194,6 +209,7 @@ ui.exportProgram.addEventListener("click", () => {
 ui.speed.addEventListener("input", () => {
   machine.speed = Number(ui.speed.value);
   ui.speedValue.textContent = `${machine.speed} mm/s`;
+  updateEstimate();
 });
 [ui.bedLength, ui.bedWidth].forEach((input) => input.addEventListener("change", () => {
   ui.bedSize.textContent = `MESA ${ui.bedLength.value} × ${ui.bedWidth.value} MM`;
