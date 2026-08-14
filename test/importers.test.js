@@ -33,6 +33,16 @@ test("converte SVG do MoldeLab de centimetros para milimetros e remove auxiliare
   assert.equal(result.warnings.length, 1);
 });
 
-test("recusa curvas SVG ainda nao achatadas", () => {
-  assert.throws(() => parseSvg(`<svg><path d="M0 0 C 1 2 3 4 5 6"/></svg>`), /nao suportado/);
+test("converte curvas e arcos SVG em trajetorias segmentadas", () => {
+  const result = parseSvg(`<svg><path d="M0 0 C 10 0 10 10 20 10 Q 25 10 30 0 A 10 10 0 0 1 40 10 Z"/></svg>`);
+  assert.equal(result.contours.length, 1);
+  assert.ok(result.contours[0].points.length > 12);
+  assert.deepEqual(result.contours[0].points.at(-1), { x: 0, y: 0 });
+});
+
+test("le linha, circulo e elipse SVG", () => {
+  const result = parseSvg(`<svg><line x1="0" y1="0" x2="10" y2="10"/><circle cx="20" cy="20" r="5"/><ellipse cx="40" cy="20" rx="8" ry="4"/></svg>`);
+  assert.equal(result.contours.length, 3);
+  assert.equal(result.contours[0].points.length, 2);
+  assert.deepEqual(result.contours[1].points[0], result.contours[1].points.at(-1));
 });
